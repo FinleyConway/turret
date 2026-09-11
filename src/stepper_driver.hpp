@@ -21,7 +21,6 @@ struct stepper_driver_spec {
 class stepper_driver {
 public:
     enum class direction {
-        none,
         clockwise,
         anti_clockwise
     };
@@ -45,11 +44,14 @@ public:
     bool step(uint16_t angle) {
         // dont step as there is no provided speed
         if (m_step_rpm == 0) return false;
+        if (!m_enabled) return false;
 
         const uint64_t steps = angle_to_step(angle);
 
-        set_pin(c_spec.direction_pin, get_direction_level());
+        // set the direction 
+        set_pin(c_spec.direction_pin, m_direction == direction::clockwise); // may need to flip when testing
 
+        // send duration pulses for the amount of steps needed to perform the given angle
         for (uint64_t i = 0; i < steps; i++) {
             set_pin(c_spec.step_pin, true);
             sleep(c_spec.pulse_width_us);
@@ -66,30 +68,33 @@ public:
     }
 
     bool set_speed(uint64_t rpm) {
+        // early exit if wanting to stop motor
         if (rpm == 0) {
             m_step_rpm = 0;
+            
             return true;
         }
 
+        // check if the speed is slower then the pulse width to prevent overflow
+        // during step delay
         if (rpm_to_step_period_us(rpm) <= c_spec.pulse_width_us) {
             return false;
         }
 
         m_step_rpm = rpm;
+
         return true;
     }
 
     void enable(bool enable) {
-        set_pin(c_spec.enable_pin, enable);
+        m_enabled = enable;
+
+        set_pin(c_spec.enable_pin, !enable);
     }
 
 private:
     constexpr uint16_t angle_to_step(uint16_t angle) const {
         return (angle * c_spec.steps_per_rev) / 360u;
-    }
-
-    constexpr bool get_direction_level() const {
-        return m_direction == direction::clockwise;
     }
 
     constexpr uint64_t rpm_to_step_period_us(uint64_t rpm) const {
@@ -98,6 +103,7 @@ private:
 
 private:
     const stepper_driver_spec c_spec;
-    direction m_direction = direction::none;
     uint32_t m_step_rpm = 0;
+    direction m_direction = direction::clockwise;
+    bool m_enabled = true;
 };
