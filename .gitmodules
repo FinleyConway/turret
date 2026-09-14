@@ -1,3 +1,9 @@
 [submodule "vendors/WiringPi"]
 	path = vendors/WiringPi
 	url = https://github.com/WiringPi/WiringPi.git
+[submodule "vendors/cpp-httplib"]
+	path = vendors/cpp-httplib
+	url = https://github.com/yhirose/cpp-httplib.git
+[submodule "vendors/json"]
+	path = vendors/json
+	url = https://github.com/nlohmann/json.git

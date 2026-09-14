@@ -15,3 +15,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
 add_executable(turret
     src/main.cpp
 )
+
+target_include_directories(turret PUBLIC
+    ${CMAKE_SOURCE_DIR}/vendors/cpp-httplib
+)
