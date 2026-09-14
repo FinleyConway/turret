@@ -35,7 +35,7 @@ public:
     }
 
     void stop() {
-        m_context.m_cancelled = false;
+        m_context.m_cancelled = true;
     }
 
 private:
