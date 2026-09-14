@@ -2,6 +2,9 @@
 
 #include <thread>
 #include <atomic>
+#include <utility>
+
+template<typename Fn> class task;
 
 class task_context {
 public:
@@ -10,6 +13,7 @@ public:
     }
 
 private:
+    template<typename>
     friend class task;
 
 private:
@@ -26,22 +30,18 @@ public:
     {
     }
 
-    ~task() {
-        stop();
-
-        if (m_worker.joinable()) {
-            m_worker.join();
-        }
-    }
+    ~task() = default;
+    task(const task&) = delete;
+    task& operator=(const task&) = delete;
 
     void stop() {
-        m_context.m_cancelled = true;
+        m_worker.request_stop();
     }
 
 private:
     task() = default;
 
 private:
-    std::thread m_worker;
+    std::jthread m_worker;
     task_context m_context;
 };
