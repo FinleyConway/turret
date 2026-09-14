@@ -1,33 +1,15 @@
 #pragma once
 
-#include <thread>
-#include <atomic>
+#include <stop_token>
 #include <utility>
-
-template<typename Fn> class task;
-
-class task_context {
-public:
-    bool is_cancelled() const {
-        return m_cancelled.load();
-    }
-
-private:
-    template<typename>
-    friend class task;
-
-private:
-    std::atomic_bool m_cancelled = false;
-};
+#include <thread>
 
 template<typename Fn>
 class task {
 public:
-    explicit task(Fn&& fn)
-        : m_worker([this, fn = std::forward<Fn>(fn)] {
-            fn(m_context);
-        })
-    {
+    explicit task(Fn&& fn) : m_worker([fn = std::forward<Fn>(fn)](std::stop_token token) {
+        fn(token);
+    }) {
     }
 
     ~task() = default;
@@ -43,5 +25,4 @@ private:
 
 private:
     std::jthread m_worker;
-    task_context m_context;
 };

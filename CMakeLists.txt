@@ -12,8 +12,14 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
     "${CMAKE_BINARY_DIR}/${BINARY_FOLDER}"
 )
 
+add_subdirectory(vendors/json)
+
 add_executable(turret
     src/main.cpp
+)
+
+target_link_libraries(turret PUBLIC
+    nlohmann_json::nlohmann_json
 )
 
 target_include_directories(turret PUBLIC

@@ -1,9 +1,19 @@
 #include <iostream>
 
-#include <httplib.h>
+#include "task.hpp"
+#include "event_queue.hpp"
 
 int main() {
-    httplib::Server server;
+    event_queue<int> q; 
+    task task([&](std::stop_token token) {
+        int i = 0;
 
-    server.listen("0.0.0.0", 8080);
+        while (q.receive(i, token)) {
+            std::cout << "Received number: " << i << std::endl;
+        }
+
+        std::cout << "task ended!\n";
+    });
+
+    q.send(10);
 }

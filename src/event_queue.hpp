@@ -1,27 +1,33 @@
 #pragma once
 
+#include <condition_variable>
+#include <stop_token>
+#include <utility>
 #include <mutex>
 #include <deque>
-#include <condition_variable>
-
-#include "task.hpp"
 
 // https://www.freertos.org/Documentation/02-Kernel/04-API-references/06-Queues/09-xQueueReceive
 
 template<typename T>
 class event_queue {
 public:
-    bool receive(T& data, const task_context& ctx) {
+    ~event_queue() {
+        destroy();
+    }
+
+    bool receive(T& data, std::stop_token token) {
         std::unique_lock lock(m_mutex);
 
-        // block thread when the queue is empty or if task is done
-        // context makes sure that the task isnt dangling when it wants to end
-        m_condition_var.wait(lock, [&] {
-            return !m_queue.empty() || ctx.is_cancelled();
-        });
+        // block thread when the queue is empty or if queue is destoryed
+        if (!m_condition_var.wait(lock, token, [this] {
+            return !m_queue.empty() || m_shutdown;
+        })) {
+            return false;
+        }
 
-        // return with no value if task is done
-        if (ctx.is_cancelled()) return false;
+        // leave function as the queue is destroyed 
+        // prevents dangling task
+        if (m_shutdown) return false;
 
         // move, pop and return the receieved value
         // making sure the queue no longer owns the data anymore
@@ -32,22 +38,38 @@ public:
     }
 
     void send(const T& data) {
-        {
+        {   
             std::lock_guard lock(m_mutex);
 
-            m_queue.emplace_back(std::move(data));
+            // prevent any more requests as queue is being destroyed
+            if (m_shutdown) return;
+
+            m_queue.emplace_back(data);
         }
 
         // notify the waiting blocked thread
         m_condition_var.notify_one();
     }
 
+    void destroy() {
+        {
+            std::lock_guard lock(m_mutex);
+
+            m_shutdown = true;
+        }
+
+        m_condition_var.notify_all();
+    }
+
     size_t size() const {
+        std::lock_guard lock(m_mutex);
+
         return m_queue.size();
     }
 
 private:
+    bool m_shutdown = false;
     std::deque<T> m_queue;
     std::mutex m_mutex;
-    std::condition_variable m_condition_var;
+    std::condition_variable_any m_condition_var;
 };
