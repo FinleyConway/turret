@@ -4,25 +4,31 @@
 #include <deque>
 #include <condition_variable>
 
+#include "task.hpp"
+
 // https://www.freertos.org/Documentation/02-Kernel/04-API-references/06-Queues/09-xQueueReceive
 
 template<typename T>
 class event_queue {
 public:
-    T receive() {
+    bool receive(T& data, const task_context& ctx) {
         std::unique_lock lock(m_mutex);
 
-        // block thread when the queue is empty
+        // block thread when the queue is empty or if task is done
+        // context makes sure that the task isnt dangling when it wants to end
         m_condition_var.wait(lock, [&] {
-            return !m_queue.empty();
+            return !m_queue.empty() || ctx.is_cancelled();
         });
+
+        // return with no value if task is done
+        if (ctx.is_cancelled()) return false;
 
         // move, pop and return the receieved value
         // making sure the queue no longer owns the data anymore
-        T data = std::move(m_queue.front());
+        data = std::move(m_queue.front());
         m_queue.pop_front();
 
-        return data;
+        return true;
     }
 
     void send(const T& data) {
