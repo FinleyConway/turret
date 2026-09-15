@@ -31,6 +31,7 @@ public:
     task(const task&) = delete;
     task& operator=(const task&) = delete;
 
+public:
     void stop() {
         m_worker.request_stop();
     }

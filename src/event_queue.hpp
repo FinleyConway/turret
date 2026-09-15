@@ -11,10 +11,19 @@
 template<typename T>
 class event_queue {
 public:
+    event_queue() = default;
+
     ~event_queue() {
-        destroy();
+        {
+            std::lock_guard lock(m_mutex);
+
+            m_shutdown = true;
+        }
+
+        m_condition_var.notify_all();
     }
 
+public:
     bool receive(T& data, std::stop_token token) {
         std::unique_lock lock(m_mutex);
 
@@ -49,16 +58,6 @@ public:
 
         // notify the waiting blocked thread
         m_condition_var.notify_one();
-    }
-
-    void destroy() {
-        {
-            std::lock_guard lock(m_mutex);
-
-            m_shutdown = true;
-        }
-
-        m_condition_var.notify_all();
     }
 
     size_t size() const {
