@@ -12,8 +12,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
     "${CMAKE_BINARY_DIR}/${BINARY_FOLDER}"
 )
 
-add_subdirectory(vendors/json)
+# add cmake vendors
+add_subdirectory(vendors/json) 
 
+# main
 add_executable(turret
     src/main.cpp
 )
@@ -25,3 +27,25 @@ target_link_libraries(turret PUBLIC
 target_include_directories(turret PUBLIC
     ${CMAKE_SOURCE_DIR}/vendors/cpp-httplib
 )
+
+# try to find WiringPi
+find_path(WIRINGPI_INCLUDE_DIR wiringPi.h)
+find_library(WIRINGPI_LIBRARY wiringPi)
+
+if(WIRINGPI_INCLUDE_DIR AND WIRINGPI_LIBRARY)
+    message(STATUS "WiringPi found, enabling GPIO support")
+
+    target_include_directories(turret PRIVATE
+        ${WIRINGPI_INCLUDE_DIR}
+    )
+
+    target_link_libraries(turret PRIVATE
+        ${WIRINGPI_LIBRARY}
+    )
+
+    target_compile_definitions(turret PRIVATE
+        HAS_WIRINGPI
+    )
+else()
+    message(STATUS "WiringPi not found, GPIO support disabled")
+endif()
