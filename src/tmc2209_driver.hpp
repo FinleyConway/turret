@@ -9,7 +9,7 @@ void sleep(uint32_t us) {}
 
 // https://circuitdigest.com/microcontroller-projects/interfacing-TMC2209-stepper-motor-driver-with-arduino-uno-basic-direction-and-stepping-control
 
-struct stepper_driver_spec {
+struct tmc2209_driver_spec {
     uint32_t steps_per_rev = 0;
     uint8_t pulse_width_us = 0;
 
@@ -18,7 +18,7 @@ struct stepper_driver_spec {
     uint8_t step_pin = 0;
 };
 
-class stepper_driver {
+class tmc2209_driver {
 public:
     enum class direction {
         clockwise,
@@ -26,7 +26,7 @@ public:
     };
 
 public:
-    constexpr explicit stepper_driver(const stepper_driver_spec& spec) 
+    constexpr explicit tmc2209_driver(const tmc2209_driver_spec& spec) 
         : c_spec(spec) 
     {
         // prevent invalid pinouts
@@ -102,7 +102,7 @@ private:
     }
 
 private:
-    const stepper_driver_spec c_spec;
+    const tmc2209_driver_spec c_spec;
     uint32_t m_step_rpm = 0;
     direction m_direction = direction::clockwise;
     bool m_enabled = true;
