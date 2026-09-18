@@ -46,7 +46,7 @@ public:
         gpio::write(spec.enable_pin, false);
     }
 
-    bool step(uint16_t angle) {
+    bool rotate(uint16_t angle) {
         // dont step as there is no provided speed
         if (m_step_rpm == 0) return false;
         if (!m_enabled) return false;
