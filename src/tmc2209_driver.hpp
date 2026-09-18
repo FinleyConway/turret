@@ -1,17 +1,17 @@
 #pragma once
 
+#include <chrono>
+#include <thread>
 #include <cstdint>
 #include <cassert>
 
 #include "gpio.hpp"
 
-void sleep(uint32_t us) {}
-
 // https://circuitdigest.com/microcontroller-projects/interfacing-TMC2209-stepper-motor-driver-with-arduino-uno-basic-direction-and-stepping-control
 
 struct tmc2209_driver_spec {
     uint32_t steps_per_rev = 0;
-    uint8_t pulse_width_us = 0;
+    std::chrono::microseconds pulse_width;
 
     gpio_pin enable_pin = gpio_pin::unconfigured;
     gpio_pin step_pin = gpio_pin::unconfigured;
@@ -51,18 +51,23 @@ public:
         if (m_step_rpm == 0) return false;
         if (!m_enabled) return false;
 
-        const uint64_t steps = angle_to_step(angle);
+        const auto steps = angle_to_step(angle);
+        const auto step_period = rpm_to_step_period(m_step_rpm);
+        auto next_step = std::chrono::steady_clock::now();
 
         // set the direction 
         gpio::write(c_spec.direction_pin, m_direction == direction::clockwise); // may need to flip when testing
 
         // send duration pulses for the amount of steps needed to perform the given angle
         for (uint64_t i = 0; i < steps; i++) {
-            gpio::write(c_spec.step_pin, true);
-            sleep(c_spec.pulse_width_us);
+            next_step += step_period;
 
+            // move to the next step
+            gpio::write(c_spec.step_pin, true);
+            std::this_thread::sleep_for(c_spec.pulse_width);
             gpio::write(c_spec.step_pin, false);
-            sleep(rpm_to_step_period_us(m_step_rpm) - c_spec.pulse_width_us);
+
+            std::this_thread::sleep_until(next_step);
         }
 
         return true;
@@ -82,7 +87,7 @@ public:
 
         // check if the speed is slower then the pulse width to prevent overflow
         // during step delay
-        if (rpm_to_step_period_us(rpm) <= c_spec.pulse_width_us) {
+        if (rpm_to_step_period(rpm) <= c_spec.pulse_width) {
             return false;
         }
 
@@ -98,12 +103,14 @@ public:
     }
 
 private:
-    constexpr uint16_t angle_to_step(uint16_t angle) const {
-        return (angle * c_spec.steps_per_rev) / 360u;
+    constexpr uint64_t angle_to_step(uint16_t angle) const {
+        return (static_cast<uint64_t>(angle) * c_spec.steps_per_rev) / 360u;
     }
 
-    constexpr uint64_t rpm_to_step_period_us(uint64_t rpm) const {
-        return 60'000'000ull / (rpm * c_spec.steps_per_rev);
+    constexpr std::chrono::microseconds rpm_to_step_period(uint64_t rpm) const {
+        return std::chrono::microseconds{
+            60'000'000ull / (rpm * c_spec.steps_per_rev)
+        };
     }
 
 private:
