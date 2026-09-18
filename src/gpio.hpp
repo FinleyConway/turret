@@ -5,6 +5,7 @@
 #endif
 
 enum class gpio_pin {
+    unconfigured = 0,
     motor_enable = 17, // test values
     motor_step = 18,
     motor_direction = 27,

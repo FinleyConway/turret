@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <cassert>
 
-void set_pin(int, bool) {}
+#include "gpio.hpp"
 
 void sleep(uint32_t us) {}
 
@@ -13,9 +13,9 @@ struct tmc2209_driver_spec {
     uint32_t steps_per_rev = 0;
     uint8_t pulse_width_us = 0;
 
-    uint8_t enable_pin = 0;
-    uint8_t direction_pin = 0;
-    uint8_t step_pin = 0;
+    gpio_pin enable_pin = gpio_pin::unconfigured;
+    gpio_pin step_pin = gpio_pin::unconfigured;
+    gpio_pin direction_pin = gpio_pin::unconfigured;
 };
 
 class tmc2209_driver {
@@ -26,19 +26,24 @@ public:
     };
 
 public:
-    constexpr explicit tmc2209_driver(const tmc2209_driver_spec& spec) 
+    explicit tmc2209_driver(const tmc2209_driver_spec& spec) 
         : c_spec(spec) 
     {
         // prevent invalid pinouts
-        assert(spec.enable_pin > 0 && "Enable pin is invalid");
-        assert(spec.step_pin > 0 && "Step pin is invalid");
-        assert(spec.direction_pin > 0 && "Direction pin is invalid");
+        assert(spec.enable_pin    != gpio_pin::unconfigured && "Enable pin is not configured");
+        assert(spec.step_pin      != gpio_pin::unconfigured && "Step pin is not configured");
+        assert(spec.direction_pin != gpio_pin::unconfigured && "Direction pin is not configured");
 
         // prevent 0 step motors
         assert(spec.steps_per_rev > 0 && "Steps per revolution must be greater than 0");
 
+        // set up driver pins
+        gpio::set_mode(spec.enable_pin, gpio_mode::output);
+        gpio::set_mode(spec.step_pin, gpio_mode::output);
+        gpio::set_mode(spec.direction_pin, gpio_mode::output);
+        
         // enable driver by default
-        set_pin(c_spec.enable_pin, false);
+        gpio::write(spec.enable_pin, false);
     }
 
     bool step(uint16_t angle) {
@@ -49,14 +54,14 @@ public:
         const uint64_t steps = angle_to_step(angle);
 
         // set the direction 
-        set_pin(c_spec.direction_pin, m_direction == direction::clockwise); // may need to flip when testing
+        gpio::write(c_spec.direction_pin, m_direction == direction::clockwise); // may need to flip when testing
 
         // send duration pulses for the amount of steps needed to perform the given angle
         for (uint64_t i = 0; i < steps; i++) {
-            set_pin(c_spec.step_pin, true);
+            gpio::write(c_spec.step_pin, true);
             sleep(c_spec.pulse_width_us);
 
-            set_pin(c_spec.step_pin, false);
+            gpio::write(c_spec.step_pin, false);
             sleep(rpm_to_step_period_us(m_step_rpm) - c_spec.pulse_width_us);
         }
 
@@ -89,7 +94,7 @@ public:
     void enable(bool enable) {
         m_enabled = enable;
 
-        set_pin(c_spec.enable_pin, !enable);
+        gpio::write(c_spec.enable_pin, !enable);
     }
 
 private:
