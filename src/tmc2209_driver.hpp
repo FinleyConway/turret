@@ -13,9 +13,9 @@ struct tmc2209_driver_spec {
     uint32_t steps_per_rev = 0;
     std::chrono::microseconds pulse_width;
 
-    gpio_pin enable_pin = gpio_pin::unconfigured;
-    gpio_pin step_pin = gpio_pin::unconfigured;
-    gpio_pin direction_pin = gpio_pin::unconfigured;
+    gpio::pin step_pin      = gpio::pin::unconfigured;
+    gpio::pin enable_pin    = gpio::pin::unconfigured;
+    gpio::pin direction_pin = gpio::pin::unconfigured;
 };
 
 class tmc2209_driver {
@@ -30,17 +30,17 @@ public:
         : c_spec(spec) 
     {
         // prevent invalid pinouts
-        assert(spec.enable_pin    != gpio_pin::unconfigured && "Enable pin is not configured");
-        assert(spec.step_pin      != gpio_pin::unconfigured && "Step pin is not configured");
-        assert(spec.direction_pin != gpio_pin::unconfigured && "Direction pin is not configured");
+        assert(spec.enable_pin    != gpio::pin::unconfigured && "Enable pin is not configured");
+        assert(spec.step_pin      != gpio::pin::unconfigured && "Step pin is not configured");
+        assert(spec.direction_pin != gpio::pin::unconfigured && "Direction pin is not configured");
 
         // prevent 0 step motors
         assert(spec.steps_per_rev > 0 && "Steps per revolution must be greater than 0");
 
         // set up driver pins
-        gpio::set_mode(spec.enable_pin, gpio_mode::output);
-        gpio::set_mode(spec.step_pin, gpio_mode::output);
-        gpio::set_mode(spec.direction_pin, gpio_mode::output);
+        gpio::set_mode(spec.enable_pin, gpio::mode::output);
+        gpio::set_mode(spec.step_pin, gpio::mode::output);
+        gpio::set_mode(spec.direction_pin, gpio::mode::output);
         
         // enable driver by default
         gpio::write(spec.enable_pin, false);
