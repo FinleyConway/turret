@@ -2,11 +2,16 @@
 
 #include <httplib.h>
 
-#include "event_queue.hpp"
-#include "task.hpp"
-#include "gpio.hpp"
+#include "config/application_config.hpp"
+#include "../event_queue.hpp"
+#include "../task.hpp"
+#include "../gpio.hpp"
 
 class application {
+public:
+    explicit application(const application_config& config) {
+    }
+
 public:
     void start() {
         // init raspberry gpio 
@@ -25,4 +30,5 @@ private:
     }
 
 private:
+    application_config m_config;
 };

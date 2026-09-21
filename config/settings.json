@@ -1,0 +1,18 @@
+{
+    "stepper_motor": {
+        "steps_per_rev" : 200,
+        "pulse_width_us": 1,
+
+        "pan_axis": {
+            "direction_pin": 28,
+            "step_pin": 20,
+            "enable_pin": 30
+        },
+
+        "tilt_axis": {
+            "direction_pin": -1,
+            "step_pin": -1,
+            "enable_pin": -1
+        }
+    }
+}

@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include <nlohmann/json.hpp>
+
 #if HAS_WIRINGPI
 #include <wiringPi.h>
 #endif
@@ -94,6 +96,24 @@ public:
 #endif
     }
 
+    static pin to_pin(int value) {
+        if (value == -1) {
+            return pin::unconfigured;
+        }
+
+        if (value < 0 || value > 27) {
+            std::cerr << "Converting a pin value to an unconfigured pin! Pin: " << value << std::endl;
+
+            return pin::unconfigured;
+        }
+
+        return static_cast<pin>(value);
+    }
+
 private:
     static inline bool s_setup = false;
 };
+
+void from_json(const nlohmann::json& j, gpio::pin& p) {
+    p = gpio::to_pin(j.get<int>());
+}
