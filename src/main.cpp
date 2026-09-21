@@ -8,6 +8,9 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    application app(application_config::read(argv[1]));
+    turret::application app(
+        turret::application_config::read(argv[1])
+    );
+
     app.start();
 }
