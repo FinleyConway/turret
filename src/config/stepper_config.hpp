@@ -5,7 +5,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "../../gpio.hpp"
+#include "core/gpio.hpp"
 
 struct stepper_config {
     uint32_t steps_per_rev = 0;

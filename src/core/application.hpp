@@ -3,9 +3,9 @@
 #include <httplib.h>
 
 #include "config/application_config.hpp"
-#include "../event_queue.hpp"
-#include "../task.hpp"
-#include "../gpio.hpp"
+#include "task/event_queue.hpp"
+#include "task/task.hpp"
+#include "core/gpio.hpp"
 
 class application {
 public:

@@ -26,6 +26,7 @@ target_link_libraries(turret PUBLIC
 
 target_include_directories(turret PUBLIC
     ${CMAKE_SOURCE_DIR}/vendors/cpp-httplib
+    ${CMAKE_CURRENT_SOURCE_DIR}/src # provide explicit cleaner headers
 )
 
 # try to find WiringPi

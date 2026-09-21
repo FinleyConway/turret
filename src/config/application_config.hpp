@@ -5,7 +5,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "stepper_config.hpp"
+#include "config/stepper_config.hpp"
 
 struct application_config;
 

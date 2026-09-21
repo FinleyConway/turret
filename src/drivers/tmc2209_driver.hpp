@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <cassert>
 
-#include "gpio.hpp"
+#include "core/gpio.hpp"
 
 // https://circuitdigest.com/microcontroller-projects/interfacing-TMC2209-stepper-motor-driver-with-arduino-uno-basic-direction-and-stepping-control
 
