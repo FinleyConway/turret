@@ -115,7 +115,7 @@ namespace turret {
         static inline bool s_setup = false;
     };
 
-    void from_json(const nlohmann::json& j, gpio::pin& p) {
+    inline void from_json(const nlohmann::json& j, gpio::pin& p) {
         p = gpio::to_pin(j.get<int>());
     }
 }

@@ -17,7 +17,7 @@ namespace turret {
     public:
         explicit application(const application_config& config) : 
             m_config(config),
-            m_stepper_task(m_stepper_event, m_config.stepper_motor)
+            m_stepper_pan_task(m_stepper_event, m_config.stepper, m_config.pan)
         {
         }
 
@@ -57,7 +57,7 @@ namespace turret {
     private:
         application_config m_config;
 
-        task<stepper_task> m_stepper_task;
+        task<stepper_task> m_stepper_pan_task;
         event_queue<stepper_control> m_stepper_event;
     };
 }
