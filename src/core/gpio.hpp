@@ -69,7 +69,7 @@ namespace turret {
     #if HAS_WIRINGPI
             pinMode(
                 static_cast<int>(pin),
-                mode == gpio_mode::output ? OUTPUT : INPUT
+                mode == mode::output ? OUTPUT : INPUT
             );
     #endif
         }
