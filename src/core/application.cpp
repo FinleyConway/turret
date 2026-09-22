@@ -3,7 +3,7 @@
 #include "core/gpio.hpp"
 
 namespace turret {
-    explicit application::application(const application_config& config) : 
+    application::application(const application_config& config) : 
         m_config(config),
         m_stepper_pan_task(m_stepper_event, m_config.stepper, m_config.pan)
     {

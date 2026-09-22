@@ -21,6 +21,7 @@ add_executable(turret
     src/config/application_config.cpp
     src/core/gpio.cpp
     src/core/application.cpp
+    src/drivers/tmc2209_driver.cpp
 )
 
 target_link_libraries(turret PUBLIC
