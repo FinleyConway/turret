@@ -1,9 +1,7 @@
 #pragma once
 
 #include <chrono>
-#include <thread>
 #include <cstdint>
-#include <cassert>
 
 #include "core/gpio.hpp"
 

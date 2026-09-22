@@ -1,5 +1,8 @@
 #include "drivers/tmc2209_driver.hpp"
 
+#include <thread>
+#include <cassert>
+
 namespace turret {
     tmc2209_driver::tmc2209_driver(const tmc2209_driver_spec& spec) 
         : c_spec(spec) 
