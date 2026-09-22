@@ -1,8 +1,7 @@
 #pragma once
 
 #include <cassert>
-
-#include <nlohmann/json.hpp>
+#include <iostream>
 
 #if HAS_WIRINGPI
 #include <wiringPi.h>
@@ -114,8 +113,4 @@ namespace turret {
     private:
         static inline bool s_setup = false;
     };
-
-    inline void from_json(const nlohmann::json& j, gpio::pin& p) {
-        p = gpio::to_pin(j.get<int>());
-    }
 }
