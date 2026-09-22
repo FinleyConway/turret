@@ -1,12 +1,5 @@
 #pragma once
 
-#include <cassert>
-#include <iostream>
-
-#if HAS_WIRINGPI
-#include <wiringPi.h>
-#endif
-
 // https://github.com/WiringPi/WiringPi/blob/master/documentation/english/functions.md
 
 namespace turret {
@@ -53,62 +46,15 @@ namespace turret {
         };
 
     public:
-        static void setup() {
-    #if HAS_WIRINGPI
-            assert(wiringPiSetupPinType(WPI_PIN_BCM) == 0);
-    #endif
+        static void setup();
 
-            s_setup = true;
-        }
+        static void set_mode(pin pin, mode mode);
 
-        static void set_mode(pin pin, mode mode) {
-            assert(s_setup && "gpio setup was not called");
-            assert(pin != pin::unconfigured && "Setting a unconfigured pin");
+        static void write(pin pin, bool level);
 
-    #if HAS_WIRINGPI
-            pinMode(
-                static_cast<int>(pin),
-                mode == mode::output ? OUTPUT : INPUT
-            );
-    #endif
-        }
+        static bool read(pin pin);
 
-        static void write(pin pin, bool level) {
-            assert(s_setup && "gpio setup was not called");
-            assert(pin != pin::unconfigured && "Writing a unconfigured pin");
-
-    #if HAS_WIRINGPI
-            digitalWrite(
-                static_cast<int>(pin),
-                level ? HIGH : LOW
-            );
-    #endif
-        }
-
-        static bool read(pin pin) {
-            assert(s_setup && "gpio setup was not called");
-            assert(pin != pin::unconfigured && "Reading a unconfigured pin");
-
-    #if HAS_WIRINGPI
-            return digitalRead(static_cast<int>(pin)) == HIGH;
-    #else
-            return false;
-    #endif
-        }
-
-        static pin to_pin(int value) {
-            if (value == -1) {
-                return pin::unconfigured;
-            }
-
-            if (value < 0 || value > 27) {
-                std::cerr << "Converting a pin value to an unconfigured pin! Pin: " << value << std::endl;
-
-                return pin::unconfigured;
-            }
-
-            return static_cast<pin>(value);
-        }
+        static pin to_pin(int value);
 
     private:
         static inline bool s_setup = false;

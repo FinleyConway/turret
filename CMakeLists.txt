@@ -19,6 +19,8 @@ add_subdirectory(vendors/json)
 add_executable(turret
     src/main.cpp
     src/config/application_config.cpp
+    src/core/gpio.cpp
+    src/core/application.cpp
 )
 
 target_link_libraries(turret PUBLIC
