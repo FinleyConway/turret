@@ -4,6 +4,7 @@
 set -e
 
 build_type="${1:-Debug}" # default to debug build
+platform_type="${2:-Pi}" # default to pi
 working_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 binary_file="$working_dir/build/turret/turret"
@@ -14,7 +15,12 @@ cd "$working_dir"
 
 build_project() {
     cmake -S "$working_dir" -B "$working_dir/build" -DCMAKE_BUILD_TYPE="$build_type"
-    cmake --build "$working_dir/build"
+
+    if [ "$platform_type" == "Pi" ]; then
+        cmake --build "$working_dir/build" --parallel 1 --verbose
+    else
+        cmake --build "$working_dir/build"
+    fi
 }
 
 check_build_type() {
