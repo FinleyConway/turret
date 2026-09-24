@@ -1,7 +1,5 @@
 #include "core/application.hpp"
 
-#include "core/gpio.hpp"
-
 namespace turret {
     application::application(const application_config& config) : 
         m_config(config),
@@ -10,9 +8,6 @@ namespace turret {
     }
 
     void application::start() {
-        // init raspberry gpio 
-        gpio::setup();
-        
         // setup http server for call and response
         httplib::Server server;
 

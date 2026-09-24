@@ -55,6 +55,5 @@ check_update_and_build() {
 check_build_type
 check_update_and_build
 
-echo "Starting turret..."
+echo "Done..."
 
-"$binary_file" "$config_file"
