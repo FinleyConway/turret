@@ -7,9 +7,9 @@ set(CMAKE_CXX_SCAN_FOR_MODULES OFF) # hush clangd
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # set build dir
-set(BINARY_FOLDER "turret")
+set(BINARY_DIR "turret")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
-    "${CMAKE_BINARY_DIR}/${BINARY_FOLDER}"
+    "${CMAKE_BINARY_DIR}/${BINARY_DIR}"
 )
 
 # add cmake vendors
@@ -54,3 +54,14 @@ if(WIRINGPI_INCLUDE_DIR AND WIRINGPI_LIBRARY)
 else()
     message(STATUS "WiringPi not found, GPIO support disabled")
 endif()
+
+# copy settings into build
+add_custom_command(TARGET turret POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/config"
+        "$<TARGET_FILE_DIR:turret>/config"
+
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_SOURCE_DIR}/scripts/run.sh"
+        "$<TARGET_FILE_DIR:turret>/run.sh"
+)   
