@@ -9,6 +9,7 @@
 
 namespace turret {
     struct tmc2209_driver_spec {
+        const uint8_t microsteps = 8; // will want to adjust this via uart too, keep const for now
         uint32_t steps_per_rev = 0;
         std::chrono::microseconds pulse_width;
 

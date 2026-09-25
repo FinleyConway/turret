@@ -29,9 +29,11 @@ namespace turret {
         if (m_step_rpm == 0) return false;
         if (!m_enabled) return false;
 
-        const auto steps = angle_to_step(angle);
+        const auto steps = angle_to_step(angle) * c_spec.microsteps;
         const auto step_period = rpm_to_step_period(m_step_rpm);
         auto next_step = std::chrono::steady_clock::now();
+
+        printf("Steps taking: %llu\n", steps);
 
         // set the direction 
         gpio::write(c_spec.direction_pin, m_direction == direction::clockwise); // may need to flip when testing
