@@ -6,7 +6,7 @@ set -e
 build_type="${1:-Debug}" # default to debug build
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 working_dir="$(cd "$script_dir/.." && pwd)"
-pi_dir="pi@turret.local:/home/finley/"
+pi_dir="finley@turret.local:/home/finley/"
 
 check_build_type() {
     if [ "$build_type" != "Release" ] && [ "$build_type" != "Debug" ]; then
