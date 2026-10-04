@@ -2,6 +2,8 @@
 #include "core/gpio.hpp"
 #include "config/application_config.hpp"
 
+#include "drivers/camera.hpp"
+
 // int main(int argc, char** argv) {
 //     if (argc != 2) {
 //         std::cerr << "Usage: program config/settings.json\n";
@@ -113,7 +115,7 @@ static void on_request_complete(Request* req) {
 int main() {
     CameraManager cm;
 
-    if (cm.start()) {
+    if (cm.start() < 0) {
         std::cerr << "Failed to start CameraManager\n";
         return 1;
     }
