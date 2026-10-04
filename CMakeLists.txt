@@ -15,6 +15,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
 # add cmake vendors
 add_subdirectory(vendors/json) 
 
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBCAMERA REQUIRED IMPORTED_TARGET libcamera)
+
 # main
 add_executable(turret
     src/main.cpp
@@ -26,6 +29,7 @@ add_executable(turret
 
 target_link_libraries(turret PUBLIC
     nlohmann_json::nlohmann_json
+    PkgConfig::LIBCAMERA
 )
 
 target_include_directories(turret PUBLIC
