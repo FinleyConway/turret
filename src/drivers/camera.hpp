@@ -5,8 +5,10 @@
 #include <vector>
 
 #include <libcamera/libcamera.h>
+#include <opencv2/opencv.hpp>
 
 // https://docs.libcamera.org/master/guides/application-developer.html
+// https://github.com/erasta/libcamera-opencv/tree/main
 
 namespace turret {
     class camera {
@@ -148,11 +150,29 @@ namespace turret {
         void on_request_complete(libcamera::Request* req) {
             if (req->status() == libcamera::Request::RequestCancelled) return;
 
-            for (auto& [stream, buffer] : req->buffers()) {
-                std::cout
-                    << "  bytesused: "
-                    << buffer->metadata().planes()[0].bytesused
-                    << '\n';
+            for (const auto& [stream, buffer] : req->buffers()) {
+                const auto cfg = stream->configuration();
+                void* data = map_framebuffer(buffer);
+
+                if (data == nullptr) continue;
+
+                // need to test this?
+                cv::Mat rgb(
+                    cfg.size.height, 
+                    cfg.size.width, 
+                    CV_8UC3, 
+                    data, 
+                    cfg.stride
+                );
+                cv::cvtColor(rgb, m_image, cv::COLOR_RGB2BGR);
+
+                static unsigned int frameNumber = 0;
+                cv::imwrite(
+                    "images/img" + std::to_string(frameNumber++) + ".png",
+                    m_image
+                );
+
+                munmap(data, buffer->planes()[0].length);
             }
 
             if (!m_running) return;
@@ -160,6 +180,33 @@ namespace turret {
             // recycle request to obtain another frame
             req->reuse(libcamera::Request::ReuseBuffers);
             assert(m_camera->queueRequest(req) == 0 && "Failed to requeue request");
+        }
+
+        // probably want to cache this process if im seeing the same fd
+        void* map_framebuffer(libcamera::FrameBuffer* buffer) {
+            auto& planes = buffer->planes();
+
+            if (planes.empty()) return nullptr;
+
+            const auto& plane = buffer->planes()[0];
+
+            // look at the shared buffer used by the camera pipeline
+            void* addr = mmap(
+                nullptr,
+                plane.length,
+                PROT_READ | PROT_WRITE,
+                MAP_SHARED,
+                plane.fd.get(),
+                plane.offset
+            );
+
+            if (addr == MAP_FAILED) {
+                std::cerr << "Failed to map frame buffer\n";
+                
+                return nullptr;
+            }
+
+            return addr;
         }
 
     private:
@@ -170,6 +217,7 @@ namespace turret {
         std::unique_ptr<libcamera::FrameBufferAllocator> m_allocator;
         std::vector<std::unique_ptr<libcamera::Request>> m_requests;
 
+        cv::Mat m_image;
         bool m_running = false;
     };
 }

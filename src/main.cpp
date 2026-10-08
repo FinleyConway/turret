@@ -27,5 +27,5 @@ int main() {
     turret::camera c;
     c.start();
 
-    std::this_thread::sleep_for(3s);
+    std::this_thread::sleep_for(1s);
 }

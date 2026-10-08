@@ -18,6 +18,9 @@ add_subdirectory(vendors/json)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBCAMERA REQUIRED IMPORTED_TARGET libcamera)
 
+find_package(OpenCV REQUIRED)
+include_directories(${OpenCV_INCLUDE_DIRS})
+
 # main
 add_executable(turret
     src/main.cpp
@@ -30,6 +33,7 @@ add_executable(turret
 target_link_libraries(turret PUBLIC
     nlohmann_json::nlohmann_json
     PkgConfig::LIBCAMERA
+    ${OpenCV_LIBS}
 )
 
 target_include_directories(turret PUBLIC
