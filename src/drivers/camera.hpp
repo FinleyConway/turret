@@ -1,24 +1,64 @@
 #pragma once
 
+#include <cassert>
+#include <memory>
+#include <vector>
+
 #include <libcamera/libcamera.h>
+
+// https://docs.libcamera.org/master/guides/application-developer.html
 
 namespace turret {
     class camera {
     public:
-        void start() {
-            assert(
-                m_manager.start() == 0 && 
-                "Failed to start camera manager"
-            );
+        camera() {
+            assert(m_manager.start() == 0 && "Failed to start camera manager");
 
             acquire_camera();
             configure_camera();
             create_allocator();
+            create_requests();
 
-            assert(
-                m_camera->start() == 0 &&
-                "Failed to start camera"
-            );
+            m_camera->requestCompleted.connect(this, &camera::on_request_complete);
+        }
+
+        ~camera() {
+            if (m_running) {
+                m_camera->stop();
+            }
+
+            if (m_allocator != nullptr && m_config != nullptr) {
+                m_allocator->free(m_config->at(0).stream());
+                m_allocator.reset();
+            }
+
+            if (m_camera != nullptr) {
+                m_camera->release();
+                m_camera.reset();
+            }
+
+            m_manager.stop();
+        }
+
+    public:
+        void start() {
+            assert(!m_running);
+
+            assert(m_camera->start() == 0 && "Failed to start camera");
+
+            m_running = true;
+
+            for (auto& request : m_requests) {
+                assert(m_camera->queueRequest(request.get()) == 0 && "Failed to queue request");
+            }
+        }
+
+        void stop() {
+            if (!m_running) return;
+
+            m_running = false;
+
+            m_camera->stop();
         }
 
         void latest_image() {
@@ -44,17 +84,16 @@ namespace turret {
                 libcamera::StreamRole::Viewfinder 
             });
 
-            assert(
-                m_config != nullptr && 
-                "Failed to generate camera configuration"
-            );
+            assert(m_config != nullptr && "Failed to generate camera configuration");
 
+            // provide camera config such as camera size 
             auto& stream_config = m_config->at(0);
 
             // apply config
-            // stream_config.size.width = 640;
-            // stream_config.size.height = 480;
+            //stream_config.size.width = 640;
+            //stream_config.size.height = 480;
 
+            // attempt to validate and apply given config
             auto configuration_status = m_config->validate();
 
             if (configuration_status == libcamera::CameraConfiguration::Adjusted) {
@@ -62,17 +101,18 @@ namespace turret {
             }
 
             assert(
-                configuration_status == libcamera::CameraConfiguration::Invalid &&
+                configuration_status != libcamera::CameraConfiguration::Invalid &&
                 "Invalid camera configuration given"
             );
 
             assert(
-                m_camera->configure(m_config.get()) < 0 &&
+                m_camera->configure(m_config.get()) == 0 &&
                 "Failed to configure camera!\n"
             );
         }
 
         void create_allocator() {
+            // create an allocator for the frame requests based on camera config
             m_allocator = std::make_unique<libcamera::FrameBufferAllocator>(m_camera);
 
             auto* view_finder_stream = m_config->at(0).stream(); 
@@ -97,7 +137,7 @@ namespace turret {
                 );
 
                 assert(
-                    request->addBuffer(view_finder_stream, frame_buffers.get()) == 0 &&
+                    request->addBuffer(view_finder_stream, frame_buffer.get()) == 0 &&
                     "Failed to add buffer to request"
                 );
 
@@ -105,13 +145,31 @@ namespace turret {
             }
         }
 
+        void on_request_complete(libcamera::Request* req) {
+            if (req->status() == libcamera::Request::RequestCancelled) return;
+
+            for (auto& [stream, buffer] : req->buffers()) {
+                std::cout
+                    << "  bytesused: "
+                    << buffer->metadata().planes()[0].bytesused
+                    << '\n';
+            }
+
+            if (!m_running) return;
+
+            // recycle request to obtain another frame
+            req->reuse(libcamera::Request::ReuseBuffers);
+            assert(m_camera->queueRequest(req) == 0 && "Failed to requeue request");
+        }
+
     private:
         libcamera::CameraManager m_manager;
 
         std::shared_ptr<libcamera::Camera> m_camera;
-        std::unique_ptr<CameraConfiguration> m_config;
+        std::unique_ptr<libcamera::CameraConfiguration> m_config;
         std::unique_ptr<libcamera::FrameBufferAllocator> m_allocator;
-
         std::vector<std::unique_ptr<libcamera::Request>> m_requests;
+
+        bool m_running = false;
     };
 }
