@@ -2,7 +2,7 @@
 #include "core/gpio.hpp"
 #include "config/application_config.hpp"
 
-#include "drivers/camera.hpp"
+#include "drivers/camera/camera.hpp"
 
 // int main(int argc, char** argv) {
 //     if (argc != 2) {
